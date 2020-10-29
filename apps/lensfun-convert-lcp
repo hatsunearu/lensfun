@@ -270,18 +270,19 @@ def read_lensfun_database():
     lensfun_cameras = {}
     lensfun_lenses_dict = {}
     def crawl_directory(dirpath):
-        for filepath in glob.glob(os.path.join(dirpath, "*.xml")):
-            if not os.path.basename(filepath).startswith("_"):
-                tree = ElementTree.parse(filepath).getroot()
-                for element in tree.findall("camera"):
-                    maker, model = child_without_attributes(element, "maker").text, \
-                                   child_without_attributes(element, "model").text
-                    lensfun_cameras[maker.lower(), model.lower()] = camera = LensfunCamera(maker, model)
-                    camera.cropfactor = float(element.find("cropfactor").text)
-                    camera.mount = element.find("mount").text
-                for element in tree.findall("lens"):
-                    lens = LensfunLens(element)
-                    lensfun_lenses_dict[lens.normalized_model, lens.cropfactor] = lens
+        for versionpath in glob.glob(os.path.join(dirpath, "version_*")):
+            for filepath in glob.glob(os.path.join(versionpath, "*.xml")):
+                if not os.path.basename(filepath).startswith("_"):
+                    tree = ElementTree.parse(filepath).getroot()
+                    for element in tree.findall("camera"):
+                        maker, model = child_without_attributes(element, "maker").text, \
+                                       child_without_attributes(element, "model").text
+                        lensfun_cameras[maker.lower(), model.lower()] = camera = LensfunCamera(maker, model)
+                        camera.cropfactor = float(element.find("cropfactor").text)
+                        camera.mount = element.find("mount").text
+                    for element in tree.findall("lens"):
+                        lens = LensfunLens(element)
+                        lensfun_lenses_dict[lens.normalized_model, lens.cropfactor] = lens
 
     paths_search_list = [args.db_path] if args.db_path else \
                         ["/usr/share/lensfun", "/usr/local/share/lensfun", "/var/lib/lensfun-updates",
